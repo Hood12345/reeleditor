@@ -43,7 +43,7 @@ def edit_video():
         crop_filter = crop_values[-1] if crop_values else None
 
         if not crop_filter:
-            raise Exception("Failed to detect crop area")
+            crop_filter = "in_w:in_h:0:0"  # fallback to original size
 
         # Step 2: Crop the video to content area
         crop_cmd = [
@@ -53,34 +53,19 @@ def edit_video():
         ]
         subprocess.run(crop_cmd, check=True)
 
-        # Step 3: Resize to fit inside 720x720 while preserving aspect ratio and detect height for caption
-        scale_probe_cmd = [
-            "ffprobe", "-v", "error", "-select_streams", "v:0",
-            "-show_entries", "stream=width,height",
-            "-of", "json", cropped_path
-        ]
-        probe_result = subprocess.run(scale_probe_cmd, capture_output=True, text=True)
-        dimensions = json.loads(probe_result.stdout)
-        original_width = dimensions['streams'][0]['width']
-        original_height = dimensions['streams'][0]['height']
+        # Step 3: Resize and pad to 720x1280 (portrait)
+        scale_and_pad = (
+            f"scale=w={OUTPUT_WIDTH}:h=-1:force_original_aspect_ratio=decrease,"
+            f"pad={OUTPUT_WIDTH}:{OUTPUT_HEIGHT}:(ow-iw)/2:(oh-ih)/2:white"
+        )
 
-        scale_factor = min(OUTPUT_WIDTH / original_width, OUTPUT_WIDTH / original_height)
-        scaled_height = int(original_height * scale_factor)
-
-        # Step 4: Pad to 720x1280 and overlay caption just above video
-        caption_y = int((OUTPUT_HEIGHT - scaled_height) / 2) - 60
-        caption_y = max(caption_y, 20)
-
+        # Step 4: Place caption just above the video (on top white pad)
         drawtext = (
             f"drawtext=fontfile='{FONT_PATH}':text='{caption}':"
-            f"fontcolor=black:fontsize=48:x=(w-text_w)/2:y={caption_y}"
+            f"fontcolor=black:fontsize=48:x=(w-text_w)/2:y=40"
         )
 
-        vf_filters = (
-            f"scale='min(iw,{OUTPUT_WIDTH})':'min(ih,{OUTPUT_WIDTH})':force_original_aspect_ratio=decrease,"  # Fit inside square
-            f"pad={OUTPUT_WIDTH}:{OUTPUT_HEIGHT}:(ow-iw)/2:(oh-ih)/2:white,"  # Center inside 720x1280
-            f"{drawtext}"
-        )
+        vf_filters = f"{scale_and_pad},{drawtext}"
 
         final_cmd = [
             "ffmpeg", "-i", cropped_path,
