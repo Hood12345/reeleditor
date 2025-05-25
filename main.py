@@ -59,9 +59,10 @@ def edit_video():
         )
 
         vf_filters = (
-            f"scale=w=min(iw*{OUTPUT_HEIGHT}/ih\,{OUTPUT_WIDTH}):"
-            f"h=min({OUTPUT_HEIGHT},ih*{OUTPUT_WIDTH}/iw),"
-            f"pad={OUTPUT_WIDTH}:{OUTPUT_HEIGHT}:(ow-iw)/2:(oh-ih)/2:white,{drawtext}"
+            f"scale='w=min(iw*{OUTPUT_HEIGHT}/ih\,{OUTPUT_WIDTH})':"
+            f"h='min({OUTPUT_HEIGHT}\,ih*{OUTPUT_WIDTH}/iw)',"
+            f"pad={OUTPUT_WIDTH}:{OUTPUT_HEIGHT}:(ow-iw)/2:(oh-ih)/2:white,"
+            f"{drawtext}"
         )
 
         final_cmd = [
