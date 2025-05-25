@@ -52,11 +52,11 @@ def edit_video():
         ]
         subprocess.run(crop_cmd, check=True)
 
-        # Step 3: Resize to fit 720x720 while preserving aspect ratio
-        # Step 4: Add padding to make 720x1280 final frame and overlay caption near top of video
+        # Step 3: Resize to fit inside 720x720 while preserving aspect ratio
+        # Step 4: Pad to 720x1280 and overlay caption slightly above the video
         drawtext = (
-            f"drawtext=fontfile='{FONT_PATH}':text='{caption}':"
-            f"fontcolor=black:fontsize=48:x=(w-text_w)/2:y=(oh/2 - ih/2 - text_h - 20)"
+            f"drawtext=fontfile={FONT_PATH}:text='{caption}':"
+            f"fontcolor=black:fontsize=48:x=(w-text_w)/2:y=50"
         )
 
         vf_filters = (
