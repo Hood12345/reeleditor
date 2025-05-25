@@ -4,7 +4,7 @@ import subprocess
 import uuid
 
 UPLOAD_DIR = "/tmp"
-FONT_PATH = "static/Inter-ExtraLight.ttf"
+FONT_PATH = "static/Inter_18pt-ExtraLight.ttf"  # Updated to match your uploaded font filename
 OUTPUT_WIDTH = 720
 OUTPUT_HEIGHT = 1280
 
