@@ -36,15 +36,14 @@ def edit_video():
         ]
         result = subprocess.run(cropdetect_cmd, capture_output=True, text=True)
 
-        # Extract crop parameters from log
         crop_lines = [line for line in result.stderr.split('\n') if "crop=" in line]
         crop_values = [line.split("crop=")[-1].strip() for line in crop_lines if "crop=" in line]
         crop_filter = crop_values[-1] if crop_values else None
 
         if not crop_filter:
-            raise Exception("Failed to detect crop area")
+            crop_filter = "iw:ih:0:0"  # fallback
 
-        # Step 2: Crop the video to content area
+        # Step 2: Crop the video
         crop_cmd = [
             "ffmpeg", "-i", raw_path,
             "-vf", f"crop={crop_filter}",
@@ -52,17 +51,18 @@ def edit_video():
         ]
         subprocess.run(crop_cmd, check=True)
 
-        # Step 3: Resize to fit inside 720x720 while preserving aspect ratio
-        # Step 4: Pad to 720x1280 and overlay caption slightly above the video
-        drawtext = (
-            f"drawtext=fontfile={FONT_PATH}:text='{caption}':"
-            f"fontcolor=black:fontsize=48:x=(w-text_w)/2:y=50"
-        )
+        # Step 3: Scale to fit width (720px), preserve aspect ratio
+        # Step 4: Pad to 720x1280
+        # Step 5: Caption just above the video
 
         vf_filters = (
-            f"scale='min(iw,{OUTPUT_WIDTH})':'min(ih,{OUTPUT_WIDTH})':force_original_aspect_ratio=decrease,"  # Fit inside square
-            f"pad={OUTPUT_WIDTH}:{OUTPUT_HEIGHT}:(ow-iw)/2:(oh-ih)/2:white,"  # Center inside 720x1280
-            f"{drawtext}"
+            f"scale=w={OUTPUT_WIDTH}:h=-1,"  # scale to width, keep height proportional
+            f"pad={OUTPUT_WIDTH}:{OUTPUT_HEIGHT}:(ow-iw)/2:(oh-ih)/2:white,"  # center padded
+            f"drawtext=fontfile='{FONT_PATH}':"
+            f"text='{caption}':"
+            f"fontcolor=black:fontsize=48:"
+            f"x=(w-text_w)/2:"
+            f"y=((oh-ih)/2 - text_h - 20)"  # position just above the video
         )
 
         final_cmd = [
