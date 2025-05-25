@@ -2,10 +2,8 @@ from flask import Flask, request, send_file
 import os
 import subprocess
 import uuid
-import json
 
 UPLOAD_DIR = "/tmp"
-FONT_PATH = "static/Inter_18pt-ExtraLight.ttf"
 OUTPUT_WIDTH = 720
 OUTPUT_HEIGHT = 1280
 
@@ -13,11 +11,10 @@ app = Flask(__name__)
 
 @app.route('/edit', methods=['POST'])
 def edit_video():
-    if 'file' not in request.files or 'caption' not in request.form:
-        return {'error': 'Missing file or caption'}, 400
+    if 'file' not in request.files:
+        return {'error': 'Missing file'}, 400
 
     file = request.files['file']
-    caption = request.form['caption']
 
     raw_filename = f"raw_{uuid.uuid4()}.mp4"
     cropped_filename = f"cropped_{uuid.uuid4()}.mp4"
@@ -59,18 +56,9 @@ def edit_video():
             f"pad={OUTPUT_WIDTH}:{OUTPUT_HEIGHT}:(ow-iw)/2:(oh-ih)/2:white"
         )
 
-        # Step 4: Place caption in white pad above video
-        # Shift the text y-position dynamically to ensure it stays in the top white area
-        drawtext = (
-            f"drawtext=fontfile='{FONT_PATH}':text='{caption}':"
-            f"fontcolor=black:fontsize=48:x=(w-text_w)/2:y=(oh-ih)/2 - text_h - 40"
-        )
-
-        vf_filters = f"{scale_and_pad},{drawtext}"
-
         final_cmd = [
             "ffmpeg", "-i", cropped_path,
-            "-vf", vf_filters,
+            "-vf", scale_and_pad,
             "-c:a", "copy",
             "-preset", "ultrafast",
             "-y", edited_path
