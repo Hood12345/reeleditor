@@ -55,14 +55,15 @@ def edit_video():
 
         # Step 3: Resize and pad to 720x1280 (portrait)
         scale_and_pad = (
-            f"scale=w={OUTPUT_WIDTH}:h=-1:force_original_aspect_ratio=decrease,"
+            f"scale=w={OUTPUT_WIDTH}:h=-1:force_original_aspect_ratio=decrease," 
             f"pad={OUTPUT_WIDTH}:{OUTPUT_HEIGHT}:(ow-iw)/2:(oh-ih)/2:white"
         )
 
-        # Step 4: Place caption just above the video (on top white pad)
+        # Step 4: Place caption in white pad above video
+        # Shift the text y-position dynamically to ensure it stays in the top white area
         drawtext = (
             f"drawtext=fontfile='{FONT_PATH}':text='{caption}':"
-            f"fontcolor=black:fontsize=48:x=(w-text_w)/2:y=((oh-ih)/2 - text_h - 20)"
+            f"fontcolor=black:fontsize=48:x=(w-text_w)/2:y=(oh-ih)/2 - text_h - 40"
         )
 
         vf_filters = f"{scale_and_pad},{drawtext}"
