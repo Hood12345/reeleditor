@@ -37,11 +37,9 @@ def edit_video():
         result = subprocess.run(cropdetect_cmd, capture_output=True, text=True)
 
         # Extract crop parameters from log
-        crop_line = ""
-        for line in result.stderr.split('\n'):
-            if "crop=" in line:
-                crop_line = line
-        crop_filter = crop_line.split("crop=")[-1].strip() if crop_line else None
+        crop_lines = [line for line in result.stderr.split('\n') if "crop=" in line]
+        crop_values = [line.split("crop=")[-1].strip() for line in crop_lines if "crop=" in line]
+        crop_filter = crop_values[-1] if crop_values else None
 
         if not crop_filter:
             raise Exception("Failed to detect crop area")
@@ -56,12 +54,13 @@ def edit_video():
 
         # Step 3: Resize/pad to vertical format and add caption
         drawtext = (
-            f"drawtext=fontfile={FONT_PATH}:text='{caption}':"
+            f"drawtext=fontfile='{FONT_PATH}':text='{caption}':"
             f"fontcolor=black:fontsize=48:x=(w-text_w)/2:y=40"
         )
 
         vf_filters = (
-            f"scale=w=min(iw\*{OUTPUT_HEIGHT}/ih\,{OUTPUT_WIDTH}):h=min({OUTPUT_HEIGHT},ih\*{OUTPUT_WIDTH}/iw),"
+            f"scale=w=min(iw*{OUTPUT_HEIGHT}/ih\,{OUTPUT_WIDTH}):"
+            f"h=min({OUTPUT_HEIGHT},ih*{OUTPUT_WIDTH}/iw),"
             f"pad={OUTPUT_WIDTH}:{OUTPUT_HEIGHT}:(ow-iw)/2:(oh-ih)/2:white,{drawtext}"
         )
 
