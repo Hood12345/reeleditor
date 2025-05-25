@@ -61,8 +61,8 @@ def edit_video():
 
         # Step 4: Place caption just above the video (on top white pad)
         drawtext = (
-drawtext=fontfile='{FONT_PATH}':text='{caption}':fontcolor=black:fontsize=48:x=(w-text_w)/2:y=((oh-ih)/2 - text_h - 20)
-
+            f"drawtext=fontfile='{FONT_PATH}':text='{caption}':"
+            f"fontcolor=black:fontsize=48:x=(w-text_w)/2:y=((oh-ih)/2 - text_h - 20)"
         )
 
         vf_filters = f"{scale_and_pad},{drawtext}"
